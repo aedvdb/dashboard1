@@ -1,0 +1,187 @@
+---
+title: "Country Population Evolution (source OWID)"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+
+```{r global, include=FALSE}
+library(datasets)
+library(highcharter) 
+library(fpp3)
+library(RColorBrewer)
+library(openxlsx) 
+library(leaflet)  
+library(geojsonio)
+library(plotly)
+library(ggplot2)
+library(tidyverse)
+```
+
+[comment 00]: # Lectura de datos y creación de campos para seleccionar  
+
+```{r, cache=TRUE,message=FALSE,echo=FALSE} 
+owid_population <- read_csv('https://ctim.es/AEDV/data/owid_population.csv') %>%
+  as_tibble()
+
+# campo para seleccionar países
+countries <- levels(as.factor(owid_population$Entity))
+
+# campo para seleccionar años
+years <- levels(as.factor(owid_population$Year))
+```
+
+[comment 01]: # Creación de la primera columna del cuadro de mando 
+
+Column {.sidebar data-width=230}
+--------------------------------------------------
+
+[comment 02]: # Creación menu selección campos 
+
+```{r}
+selectInput(
+  "country1", # nombre de uso interno del campo. Se accede al campo haciendo input$country1
+  label = "Country 1:", # etiqueta del campo para presentar en el cuadro de mando
+  choices = countries, # vector con las opciones para seleccionar 
+  selected = "Europe" # la opción seleccionada por defecto 
+)
+```
+
+```{r}
+selectInput(
+  "country2", 
+  label = "Country 2:",
+  choices = countries, 
+  selected = "North America"
+)
+```
+
+```{r}
+selectInput(
+  "country3", 
+  label = "Country 3:",
+  choices = countries,
+  selected = "Asia"
+)
+```
+
+```{r}
+selectInput(
+  "country4", 
+  label = "Country 4:",
+  choices = countries,
+  selected = "Africa"
+)
+```
+
+```{r}
+selectInput(
+  "yearinit", 
+  label = "Start year:",
+  choices = years, 
+  selected = "1800"
+)
+```
+
+```{r}
+selectInput(
+  "yearend", 
+  label = "End year:",
+  choices = years, 
+  selected = "2021"
+)
+```
+
+[comment 03]: # Creación de la segunda columna del cuadro de mando 
+
+Column
+--------------------------------------------------
+
+[comment 04]: # Inclusión de 2 gráficos con hchart con los 2 primeros países. El string ### es necesario para fijar cada gráfico y se usa también para añadir un título 
+
+###  
+
+[comment 05]: # Creación de un widget con renderHighchart
+
+```{r} 
+renderHighchart({
+ tsibble( # Creación de la serie temporal que se dibujará con hchart 
+  date = owid_population$Year,
+  population = owid_population$`Population (historical estimates)`,
+  location = owid_population$Entity,
+  index = date,
+  key = location) %>% 
+    filter(location == input$country1) %>% 
+    filter(date >= input$yearinit & date <= input$yearend) %>% 
+    hchart("line",hcaes(x = date, y = population, group = location))
+})
+```
+
+###
+
+```{r} 
+renderHighchart({
+ tsibble(
+  date = owid_population$Year,
+  population = owid_population$`Population (historical estimates)`,
+  location = owid_population$Entity,
+  index = date,
+  key = location) %>% 
+    filter(location == input$country2) %>% 
+    filter(date >= input$yearinit & date <= input$yearend) %>% 
+    hchart("line",hcaes(x = date, y = population, group = location))
+})
+```
+
+[comment 06]: # Creación de la tercera columna del cuadro de mando 
+
+Column
+--------------------------------------------------
+
+[comment 07]: # Inclusión de 2 gráficos con hchart con el tercero y cuarto país
+
+### 
+
+
+```{r} 
+renderHighchart({
+ tsibble(
+  date = owid_population$Year,
+  population = owid_population$`Population (historical estimates)`,
+  location = owid_population$Entity,
+  index = date,
+  key = location) %>% 
+    filter(location == input$country3) %>% 
+    filter(date >= input$yearinit & date <= input$yearend) %>% 
+    hchart("line",hcaes(x = date, y = population, group = location))
+})
+```
+
+###
+
+```{r} 
+renderHighchart({
+ tsibble(
+  date = owid_population$Year,
+  population = owid_population$`Population (historical estimates)`,
+  location = owid_population$Entity,
+  index = date,
+  key = location) %>% 
+    filter(location == input$country4) %>% 
+    filter(date >= input$yearinit & date <= input$yearend) %>% 
+    hchart("line",hcaes(x = date, y = population, group = location))
+})
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
